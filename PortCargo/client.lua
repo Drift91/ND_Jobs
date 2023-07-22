@@ -60,12 +60,18 @@ end
 
 -- Stop or continue after objective is finished
 function NotifChoise()
+    local timer = 12
+    Citizen.CreateThread(function()
+        while timer >= 1 do
+            Citizen.Wait(1000)
+            timer = timer - 1
+        end
+    end)
+
     Citizen.CreateThread(function()
         drawnotifcolor("Press ~g~E~w~ to continue.\nPress ~r~X~w~ to stop working.", 140)
-        local timer = 1200
         while timer >= 1 do
-            Citizen.Wait(10)
-            timer = timer - 1
+            Citizen.Wait(0)
             if IsControlJustPressed(1, 38) then
                 NewChoise()
                 break
