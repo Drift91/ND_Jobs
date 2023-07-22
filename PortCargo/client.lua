@@ -3,169 +3,177 @@ local show, JobStarted, IsPaletteSpawned, isAttached, attachedEntity = false, fa
 pay = 0
 
 function NewBlip()
-    local objectif = math.randomchoice(Config.pos)
-    local ped = PlayerPedId()
+    Citizen.CreateThread(function()
+        local objectif = math.randomchoice(Config.pos)
+        local ped = PlayerPedId()
 
-    local blip = AddBlipForCoord(objectif.x, objectif.y, objectif.z)
-    SetBlipSprite(blip, 1)
-    SetBlipColour(blip, 2)
-    SetBlipRoute(blip, true)
-    SetBlipRouteColour(blip, 2)
+        local blip = AddBlipForCoord(objectif.x, objectif.y, objectif.z)
+        SetBlipSprite(blip, 1)
+        SetBlipColour(blip, 2)
+        SetBlipRoute(blip, true)
+        SetBlipRouteColour(blip, 2)
 
-    local coords = GetEntityCoords(ped)
-    local distance = GetDistanceBetweenCoords(coords, objectif.x, objectif.y, objectif.z, true)
+        local coords = GetEntityCoords(ped)
+        local distance = GetDistanceBetweenCoords(coords, objectif.x, objectif.y, objectif.z, true)
 
-    while true do
-        Citizen.Wait(0)
-        coords = GetEntityCoords(ped)
-        distance = GetDistanceBetweenCoords(coords, objectif.x, objectif.y, objectif.z, true)
-        if distance <= 15 then
-            if distance <= 4 then
-                local carpalette = GetVehiclePedIsIn(ped, false)
-                local carentity = GetEntityModel(carpalette)
-                local car_name = GetDisplayNameFromVehicleModel(carentity)
-                if car_name == "FORK" then
-                    local Palette = GetClosestObjectOfType(coords, 5.0, PaletteActuelle, false, false, false)
-                    if DoesEntityExist(Palette) == 1 then
-                        RemoveBlip(blip)
-                        DeleteEntity(Palette)
-                        drawnotifcolor("Delivery completed.", 25)
-                        pay = pay + Config.Amount
-                        PaletteActuelle, attachedEntity = nil, nil
-                        IsPaletteSpawned, isAttached = false, false
-                        NotifChoise()
-                        break
-                    else
-                        drawnotifcolor("You're not carrying the pallet. Press X to end the job.", 208)
+        while true do
+            Citizen.Wait(0)
+            coords = GetEntityCoords(ped)
+            distance = GetDistanceBetweenCoords(coords, objectif.x, objectif.y, objectif.z, true)
+            if distance <= 15 then
+                if distance <= 4 then
+                    local carpalette = GetVehiclePedIsIn(ped, false)
+                    local carentity = GetEntityModel(carpalette)
+                    local car_name = GetDisplayNameFromVehicleModel(carentity)
+                    if car_name == "FORK" then
+                        local Palette = GetClosestObjectOfType(coords, 5.0, PaletteActuelle, false, false, false)
+                        if DoesEntityExist(Palette) == 1 then
+                            RemoveBlip(blip)
+                            DeleteEntity(Palette)
+                            drawnotifcolor("Delivery completed.", 25)
+                            pay = pay + Config.Amount
+                            PaletteActuelle, attachedEntity = nil, nil
+                            IsPaletteSpawned, isAttached = false, false
+                            NotifChoise()
+                            break
+                        else
+                            drawnotifcolor("You're not carrying the pallet. Press X to end the job.", 208)
+                        end
                     end
                 end
             end
-        end
-        if IsControlJustPressed(1, 73) then
-            RemoveBlip(blip)
-            local Palette = GetClosestObjectOfType(coords, 5.0, PaletteActuelle, false, false, false)
-            local DoesPaletteExist = DoesEntityExist(Palette)
-            if DoesPaletteExist == 1 then
-                DeleteEntity(Palette)
-                IsPaletteSpawned = false
+            if IsControlJustPressed(1, 73) then
+                RemoveBlip(blip)
+                local Palette = GetClosestObjectOfType(coords, 5.0, PaletteActuelle, false, false, false)
+                local DoesPaletteExist = DoesEntityExist(Palette)
+                if DoesPaletteExist == 1 then
+                    DeleteEntity(Palette)
+                    IsPaletteSpawned = false
+                end
+                drawnotifcolor("Bring back the forklift.", 25)
+                FinService()
+                break
             end
-            drawnotifcolor("Bring back the forklift.", 25)
-            FinService()
-            break
         end
-    end
+    end)
 end
 
 -- Stop or continue after objective is finished
 function NotifChoise()
-    drawnotifcolor("Press ~g~E~w~ to continue.\nPress ~r~X~w~ to stop working.", 140)
-    local timer = 1200
-    while timer >= 1 do
-        Citizen.Wait(10)
-        timer = timer - 1
-        if IsControlJustPressed(1, 38) then
-            NewChoise()
-            break
+    Citizen.CreateThread(function()
+        drawnotifcolor("Press ~g~E~w~ to continue.\nPress ~r~X~w~ to stop working.", 140)
+        local timer = 1200
+        while timer >= 1 do
+            Citizen.Wait(10)
+            timer = timer - 1
+            if IsControlJustPressed(1, 38) then
+                NewChoise()
+                break
+            end
+            if IsControlJustPressed(1, 73) then
+                drawnotifcolor("Bring back the forklift.", 25)
+                FinService()
+                IsPaletteSpawned = false
+                break
+            end
+            if timer == 1 then
+                drawnotifcolor("Bring back the forklift.", 25)
+                FinService()
+                IsPaletteSpawned = false
+                break
+            end
         end
-        if IsControlJustPressed(1, 73) then
-            drawnotifcolor("Bring back the forklift.", 25)
-            FinService()
-            IsPaletteSpawned = false
-            break
-        end
-        if timer == 1 then
-            drawnotifcolor("Bring back the forklift.", 25)
-            FinService()
-            IsPaletteSpawned = false
-            break
-        end
-    end
+    end)
 end
 
 -- Spawns first objetive and blip
 function NewChoise()
-    local prop = math.randomchoice(Config.props)
-    local ped = PlayerPedId()
+    Citizen.CreateThread(function()
+        local prop = math.randomchoice(Config.props)
+        local ped = PlayerPedId()
 
-    while not HasModelLoaded(prop.model) do
-        RequestModel(prop.model)
-        Citizen.Wait(1)
-    end
+        while not HasModelLoaded(prop.model) do
+            RequestModel(prop.model)
+            Citizen.Wait(1)
+        end
 
-    local blip = AddBlipForCoord(prop.x, prop.y, prop.z)
-    SetBlipSprite(blip, 1)
-    SetBlipColour(blip, 3)
-    SetBlipRoute(blip, true)
-    SetBlipRouteColour(blip, 3)
+        local blip = AddBlipForCoord(prop.x, prop.y, prop.z)
+        SetBlipSprite(blip, 1)
+        SetBlipColour(blip, 3)
+        SetBlipRoute(blip, true)
+        SetBlipRouteColour(blip, 3)
 
-    drawnotifcolor("Go to the marked location.\nPress ~r~X~w~ to stop at any moment.", 140)
-    local coords = GetEntityCoords(ped)
-    local distance = GetDistanceBetweenCoords(coords, prop.x, prop.y, prop.z, true)
+        drawnotifcolor("Go to the marked location.\nPress ~r~X~w~ to stop at any moment.", 140)
+        local coords = GetEntityCoords(ped)
+        local distance = GetDistanceBetweenCoords(coords, prop.x, prop.y, prop.z, true)
 
-    while true do
-        Citizen.Wait(0)
-        coords = GetEntityCoords(ped)
-        distance = GetDistanceBetweenCoords(coords, prop.x, prop.y, prop.z, true)
-        if distance <= 60 then
-            if not IsPaletteSpawned then
-                local objcreated2 = CreateObject(prop.model, prop.x, prop.y, prop.z, true, false, true)
-                PaletteActuelle = prop.model
-                SetModelAsNoLongerNeeded(objcreated2)
-                IsPaletteSpawned = true
+        while true do
+            Citizen.Wait(0)
+            coords = GetEntityCoords(ped)
+            distance = GetDistanceBetweenCoords(coords, prop.x, prop.y, prop.z, true)
+            if distance <= 60 then
+                if not IsPaletteSpawned then
+                    local objcreated2 = CreateObject(prop.model, prop.x, prop.y, prop.z, true, false, true)
+                    PaletteActuelle = prop.model
+                    SetModelAsNoLongerNeeded(objcreated2)
+                    IsPaletteSpawned = true
+                end
+                if distance <= 10 and IsControlJustPressed(0, 57) then
+                    RemoveBlip(blip)
+                    NewBlip()
+                    break
+                end
             end
-            if distance <= 10 and IsControlJustPressed(0, 57) then
+            if IsControlJustPressed(1, 73) then
                 RemoveBlip(blip)
-                NewBlip()
+                drawnotifcolor("Bring back the forklift.", 140)
+                IsPaletteSpawned = false
+                FinService()
                 break
             end
         end
-        if IsControlJustPressed(1, 73) then
-            RemoveBlip(blip)
-            drawnotifcolor("Bring back the forklift.", 140)
-            IsPaletteSpawned = false
-            FinService()
-            break
-        end
-    end
+    end)
 end
 
 -- end job
 function FinService()
-    local coordsEndService = vector3(782.572, -2985.0231, 4.801)
-    local ped = PlayerPedId()
+    Citizen.CreateThread(function()
+        local coordsEndService = vector3(782.572, -2985.0231, 4.801)
+        local ped = PlayerPedId()
 
-    AddTextEntry("press_ranger_fork", 'Press ~INPUT_CONTEXT~ to store the forklift and get your money.')
+        AddTextEntry("press_ranger_fork", 'Press ~INPUT_CONTEXT~ to store the forklift and get your money.')
 
-    local blip = AddBlipForCoord(coordsEndService)
-    SetBlipSprite(blip, 1)
-    SetBlipColour(blip, 1)
-    SetBlipRoute(blip, true)
-    SetBlipRouteColour(blip, 1)
+        local blip = AddBlipForCoord(coordsEndService)
+        SetBlipSprite(blip, 1)
+        SetBlipColour(blip, 1)
+        SetBlipRoute(blip, true)
+        SetBlipRouteColour(blip, 1)
 
-    while true do
-        Citizen.Wait(0)
-        local coords = GetEntityCoords(ped)
-        local distance = GetDistanceBetweenCoords(coordsEndService, coords, true)
-        if distance <= 5 then
-            DisplayHelpTextThisFrame("press_ranger_fork")
-            if IsControlPressed(1, 38) then
-                local carpalette = GetVehiclePedIsIn(ped, false)
-                local carentity = GetEntityModel(carpalette)
-                local car_name = GetDisplayNameFromVehicleModel(carentity)
-                if car_name ~= "FORK" then
-                    drawnotifcolor("You're not in your forklift.", 208)
-                else
-                    DeleteVehicle(carpalette)
-                    TriggerServerEvent("PortCargo:GiveReward", pay)
-                    drawnotifcolor("You've received ~g~$" .. pay .. "~w~ for completing the job.", 140)
-                    RemoveBlip(blip)
-                    JobStarted, show, PaletteActuelle = false, false, nil
-                    break
+        while true do
+            Citizen.Wait(0)
+            local coords = GetEntityCoords(ped)
+            local distance = GetDistanceBetweenCoords(coordsEndService, coords, true)
+            if distance <= 5 then
+                DisplayHelpTextThisFrame("press_ranger_fork")
+                if IsControlJustPressed(1, 38) then
+                    local carpalette = GetVehiclePedIsIn(ped, false)
+                    local carentity = GetEntityModel(carpalette)
+                    local car_name = GetDisplayNameFromVehicleModel(carentity)
+                    if car_name ~= "FORK" then
+                        drawnotifcolor("You're not in your forklift.", 208)
+                    else
+                        DeleteVehicle(carpalette)
+                        TriggerServerEvent("PortCargo:GiveReward", pay)
+                        drawnotifcolor("You've received ~g~$" .. pay .. "~w~ for completing the job.", 140)
+                        RemoveBlip(blip)
+                        JobStarted, show, PaletteActuelle = false, false, nil
+                        break
+                    end
                 end
             end
         end
-    end
 
+    end)
 end
 
 -- Spawn forklift
@@ -201,7 +209,7 @@ Citizen.CreateThread(function()
         local distance = GetDistanceBetweenCoords(vector3(785.8201, -2975.85644, 6.02), coords, true)
         if distance <= 5 then
             DisplayHelpTextThisFrame("press_start_job")
-            if IsControlPressed(1, 38) then
+            if IsControlJustPressed(1, 38) then
                 PriseService()
             end
         end
