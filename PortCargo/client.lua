@@ -4,7 +4,7 @@ pay = 0
 
 function NewBlip()
     local objectif = math.randomchoice(Config.pos)
-    local ped = GetPlayerPed(-1)
+    local ped = PlayerPedId()
 
     local blip = AddBlipForCoord(objectif.x, objectif.y, objectif.z)
     SetBlipSprite(blip, 1)
@@ -85,7 +85,7 @@ end
 -- Spawns first objetive and blip
 function NewChoise()
     local prop = math.randomchoice(Config.props)
-    local ped = GetPlayerPed(-1)
+    local ped = PlayerPedId()
 
     while not HasModelLoaded(prop.model) do
         RequestModel(prop.model)
@@ -132,7 +132,7 @@ end
 -- end job
 function FinService()
     local coordsEndService = vector3(782.572, -2985.0231, 4.801)
-    local ped = GetPlayerPed(-1)
+    local ped = PlayerPedId()
 
     AddTextEntry("press_ranger_fork", 'Press ~INPUT_CONTEXT~ to store the forklift and get your money.')
 
@@ -170,7 +170,7 @@ end
 
 -- Spawn forklift
 function PriseService()
-    local ped = GetPlayerPed(-1)
+    local ped = PlayerPedId()
     local vehicleName = 'forklift'
 
     RequestModel(vehicleName)
@@ -196,7 +196,7 @@ Citizen.CreateThread(function()
 
     while true do
         Citizen.Wait(0)
-        local ped = GetPlayerPed(-1)
+        local ped = PlayerPedId()
         local coords = GetEntityCoords(ped)
         local distance = GetDistanceBetweenCoords(vector3(785.8201, -2975.85644, 6.02), coords, true)
         if distance <= 5 then
@@ -281,7 +281,7 @@ CreateThread(function()
                     -- get vehicle infront
                     local pos = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 2.0, 0.0)
                     local veh = GetClosestVehicle(pos, 2.0, 0, 70)
-                    local ped = GetPlayerPed(-1)
+                    local ped = PlayerPedId()
                     local coords = GetEntityCoords(ped)
                     local object = GetClosestObjectOfType(coords, 5.0, PaletteActuelle, false, false, false)
                     
@@ -310,7 +310,7 @@ CreateThread(function()
         -- check every 500ms if helptext should show
         Wait(500)
         if JobStarted then
-            local ped = GetPlayerPed(-1)
+            local ped = PlayerPedId()
             local carpalette = GetVehiclePedIsIn(ped, false)
             local carentity = GetEntityModel(carpalette)
             local car_name = GetDisplayNameFromVehicleModel(carentity)
